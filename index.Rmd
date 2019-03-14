@@ -24,17 +24,65 @@ ggplot(data = mpg) +
 
 What are the advantages to using faceting instead of the colour aesthetic? What are the disadvantages? How might the balance change if you had a larger dataset?
 
+Kui andmepunkte on palju ja nad on ühes kohas koos, hakkavad nad aes colour kasutades kattuma ja graafik pole enam loetav. Samas võib olla facet_wrap kasutades andmeid raskem võrrelda. Kui andmeid on vähe, pole mõtet teha suurt hulka graafikuid, millel kõigil on vaid mõned punktid.
+
 - Recreate the R code necessary to generate the following graphs.
 
 ```{r, out.width=200}
 knitr::include_graphics(paste0("plots/fig", 1:6, ".png"))
 ```
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy), show.legend = FALSE) +
+  geom_point() + 
+  geom_smooth(se=FALSE)
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, group=drv), show.legend = FALSE) +
+  geom_point() + 
+  geom_smooth(se=FALSE)
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, group=drv, color=drv)) +
+  geom_point() + 
+  geom_smooth(se=FALSE)
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(aes(color=drv)) + 
+  geom_smooth(se=FALSE)
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(aes(color=drv)) + 
+  geom_smooth(aes(linetype=drv), se=FALSE)
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, fill=drv)) +
+  geom_point(shape=c(21), color="white", stroke=1, size=1.5)
+```
 
 - Most geoms and stats come in pairs that are almost always used in concert. Read through the documentation and make a list of all the pairs. What do they have in common?
 
-- Compare and contrast geom_jitter() with geom_count().
+geom_bar() stat_count(), 
+geom_bin2d() stat_bin2d(), 
+geom_boxplot() stat_boxplot(), 
+geom_col() stat_identity(), 
+geom_count() stat_sum(), 
+geom_density() stat_density(), 
+geom_density_2d() stat_density_2d(), 
+geom_hex() stat_binhex(), 
+geom_freqpoly() stat_bin(), 
+geom_qq_line() stat_qq_line(), 
+geom_quantile() stat_quantile(), 
+geom_smooth() stat_smooth(), 
+geom_violin() stat_ydensity, 
+geom_sf() stat_sf()
 
+geom asemel on võimalik kasutada stat funktsioone
+
+
+- Compare and contrast geom_jitter() with geom_count().
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_jitter()
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_count()
+```
+ Jitter lisab graafikule "müra" punktidena, count muudab graafikul suuremaks need punktid, kus on ülekattuvus - mida rohkem kattuvaid punkte, seda suurem punkt luuakse.
+ 
 - What does the plot below tell you about the relationship between city and highway mpg (fuel consumption)? Why is coord_fixed() important? What does geom_abline() do?
+
+Maanteel saab kõigi nende autodega sõita rohkem miile kui linnas. coord_fixed() teeb x ja y telje ühikud sama pikaks ja seega graafiku paremini loetavaks. geom_abline() lisab referentsjoone.
 
 ```{r}
 ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
@@ -44,6 +92,8 @@ ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
 ```
 
 - What is the default geom associated with stat_summary()?
+
+geom_pointrange()
 
 ```{r}
 ggplot(data = diamonds) + 
@@ -57,15 +107,49 @@ ggplot(data = diamonds) +
 
 How could you rewrite the previous plot to use that geom function instead of the stat function?
  
- 
+```{r}
+ggplot(data = diamonds) + 
+  geom_pointrange(
+    mapping = aes(x = cut, y = depth),
+    stat="summary",
+    fun.ymin = min,
+    fun.ymax = max,
+    fun.y = median
+  )
+```
 - What does geom_col() do? How is it different to geom_bar()?
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+puuviljasalat <- data.frame(puuvili = c("banaan", "apelsin", "pirn", "virsik"), kogus = c(2, 3, 3, 4))
+ggplot(puuviljasalat, aes(puuvili, kogus)) +
+  geom_col()
+```
+
+geom_bar arvutab tulba kõrguse loendades või proportsiooni leides, geom_col puhul on tulba kõrguseks andmetes olemasolev väärtus
 
 - What variables does stat_smooth() compute? What parameters control its behaviour?
 
+Arvutab:
+y - predicted value, 
+ymin - lower pointwise confidence interval around the mean, 
+ymax - upper pointwise confidence interval around the mean, 
+se - standard error
+
+Parameetrid:
+method, formula, na.rm
+
 - In our proportion bar chart, we need to set group = 1. Why? In other words what is the problem with these two graphs?
+
+Ei näe klassidevahelisi proportsioone.
 ```{r}
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, y = ..prop..))
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, fill = color, y = ..prop..))
+```
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = ..prop.., group=1))
 ```
